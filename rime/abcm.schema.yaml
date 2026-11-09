@@ -1,0 +1,68 @@
+schema:
+  schema_id: abcm
+  name: 智能ABC · 改
+  version: "0.1.0"
+  author:
+    - 云风 <cloudwu@gmail.com>
+  description: |
+    基于原 ABC 输入法的改版。
+
+switches:
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: simplification
+    reset: 1
+    states: [ 漢字, 汉字 ]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - punctuator
+    - lua_processor@*abcm_processor
+    - selector
+    - fluid_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - lua_translator@*abcm_translator
+    - punct_translator
+  filters:
+    - simplifier
+    - lua_filter@*abcm_filter
+    - uniquifier
+
+speller:
+  alphabet: abcdefghijklmnopqrstuvwxyz12345678
+  initials: abcdefghjklmnopqrstwxyz
+  delimiter: "'"
+  algebra:
+    - xform/^zh/u/
+    - xform/^ch/v/
+    - xform/^sh/i/
+    - abbrev/^([a-z]).+$/$1/
+    - xform/^u/zh/
+    - xform/^v/ch/
+    - xform/^i/sh/
+
+recognizer:
+  import_preset: default 
+  patterns:
+    inumber: "^[iI][0-9gsbqweznyrjd$kmflteohpcuaix+*/-]+$"
+
+punctuator:
+  import_preset: default 
+  full_shape:
+    "^": "……"
+
+translator:
+  dictionary: luna_pinyin
+
+simplifier:
+  excluded_types:
+    - inumber
