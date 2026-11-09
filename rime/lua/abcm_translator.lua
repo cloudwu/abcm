@@ -1,4 +1,5 @@
 local stroke = require "abcm_stroke"
+local keywords = require "abcm_keywords"
 
 local translator = {}
 
@@ -43,8 +44,24 @@ local function filter_cand(pinyin, input, cand, start)
 	yield(cand)
 end
 
+local function print(...)
+	log.warning(table.concat({...}, " "))
+end
+
 function translator.func(input, seg, env)
 	if seg:has_tag "abc" then
+		local rawinput = env.engine.context.input
+		if keywords[rawinput] then
+			local cand = Candidate(
+				"keyword",
+				seg.start,
+				seg._end,
+				rawinput,
+				"西文"
+			)
+			yield(cand)
+			return
+		end
 		local pinyin, has_strokes = filter_pinyin(input)
 		local qseg = Segment(0, #pinyin)
 		qseg.tags = seg.tags

@@ -18,6 +18,7 @@ local function match_stroke(cand)
 	local s, e = 1
 	local full_comment = ""
 	for seg, code in pinyin:gmatch "([^%d']+)(%d*)" do
+		local comment
 		s, e = hz:find(cpattern, s)
 		local ch = hz:sub(s,e)
 		s = e + 1
@@ -28,13 +29,11 @@ local function match_stroke(cand)
 					return false
 				end
 				comment = full_code
-			else
-				comment = "?"
 			end
 		else
 			comment = clut[ch]
 		end
-		full_comment = full_comment .. comment .. " "
+		full_comment = full_comment .. (comment or "?") .. " "
 	end
 	return full_comment
 end
