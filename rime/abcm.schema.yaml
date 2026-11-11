@@ -56,11 +56,9 @@ recognizer:
   patterns:
     inumber: "^[iI][0-9gsbqweznyrjd$kmflteohpcuaix+*/-]+$"
 
-
 punctuator:
   digit_separators: ",.:"
   half_shape:
-    ' ' : { commit: '　' }
     ',' : { commit: ， }
     '.' : { commit: 。 }
     '<' : [ 《, 〈, «, ‹ ]
@@ -93,44 +91,9 @@ punctuator:
     ']' : [ 」, 】, 〕, ］ ]
     '{' : [ 『, 〖, ｛ ]
     '}' : [ 』, 〗, ｝ ]
-#  half_shape:
-#    ',' : { commit: "," }
-#    '.' : { commit: "." }
-#    '<' : { commit: "<" }
-#    '>' : { commit: ">" }
-#    '/' : { commit: "/" }
-#    '?' : { commit: "?" }
-#    ';' : { commit: ";" }
-#    ':' : { commit: ":" }
-#    "'" : { commit: "'" }
-#    '"' : { commit: '"' }
-#    '\' : { commit: '\' }
-#    '|' : { commit: "|" }
-#    '`' : { commit: "`" }
-#    '~' : { commit: "~" }
-#    '!' : { commit: "!" }
-#    '@' : { commit: "@" }
-#    '#' : { commit: "#" }
-#    '%' : { commit: "%" }
-#    '$' : { commit: "$" }
-#    '^' : { commit: "^" }
-#    '&' : { commit: "&" }
-#    '*' : { commit: "*" }
-#    '(' : { commit: "(" }
-#    ')' : { commit: ")" }
-#    '-' : { commit: "-" }
-#    '_' : { commit: "_" }
-#    '+' : { commit: "+" }
-#    '=' : { commit: "=" }
-#    '[' : { commit: "[" }
-#    ']' : { commit: "]" }
-#    '{' : { commit: "{" }
-#    '}' : { commit: "}" }
 
 translator:
   dictionary: luna_pinyin
-  enable_completion: false
-  enable_correction: false
   enable_user_dict: true
 
 simplifier:

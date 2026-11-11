@@ -6,6 +6,11 @@ local translator = {}
 local dict
 local candidate_state = "close"
 local candidate_handler
+local mem
+
+local function print(...)
+	log.warning(table.concat({...}, " "))
+end
 
 function translator.init(env)
 	dict = Component.Translator(env.engine, "translator", "script_translator")
@@ -15,12 +20,28 @@ function translator.init(env)
 				candidate_state = ctx:get_property(name)
 			end
 		end)
+	mem = Memory (
+		env.engine,
+		env.engine.schema,
+		"translator"
+	)
+
+	mem:memorize(function(commit)
+		-- todo : user dict
+		for i, entry in ipairs(commit:get()) do
+--			print("Memorize", entry.text, tostring(entry.comment), tostring(entry.custom_code))
+		end
+		return true
+	end)
 end
 
 function translator.fini(env)
 	if candidate_handler then
 		candidate_handler:disconnect()
 		candidate_handler = nil
+	end
+	if mem then
+		mem:disconnect()
 	end
 end
 
@@ -47,7 +68,7 @@ end
 
 local function yield_cand(cand)
 	if candidate_state == "one" then
-		if cand.preedit:find "[%d']" then
+		if cand.preedit:find "[%d'][a-z]" then
 			return
 		end
 	end
@@ -66,10 +87,6 @@ local function filter_cand(pinyin, input, cand, start)
 	cand._end = #input + start
 	cand.preedit = input
 	yield_cand(cand)
-end
-
-local function print(...)
-	log.warning(table.concat({...}, " "))
 end
 
 function translator.func(input, seg, env)

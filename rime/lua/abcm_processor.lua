@@ -74,6 +74,9 @@ function processor.init(env)
 	switch_state(env, "initial")
 end
 
+function processor.fini(env)
+end
+
 local function valid_char(keycode, set)
 	if keycode <= cSpace or keycode > 0x7f then
 		return
@@ -126,7 +129,7 @@ function state.selecting(env, ctx, keycode)
 				local cand = seg:get_selected_candidate()
 				if cand then
 				    local preedit = cand.preedit
-					if preedit:find "[%d']" then
+					if preedit:find "[%d'][a-z]" then
 						seg.status = "kVoid"
 						refresh(env)
 						return kAccepted
@@ -140,7 +143,7 @@ function state.selecting(env, ctx, keycode)
 				return kAccepted
 			end
 		end
-		if ctx:reopen_previous_segment() then
+		if ctx:reopen_previous_selection() then
 			return kAccepted
 		end
 		ctx:clear()
@@ -207,6 +210,8 @@ function state.initial(env, ctx, keycode)
 	local current = valid_char(keycode, setInitials)
 	if current then
 		return push_initial(env, ctx, current)
+	elseif keycode >= c_A and keycode <= c_Z then
+		return kRejected
 	else
 		return kNoop
 	end
