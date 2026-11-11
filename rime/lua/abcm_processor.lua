@@ -208,7 +208,7 @@ function state.initial(env, ctx, keycode)
 	if current then
 		return push_initial(env, ctx, current)
 	else
-		return ignore_key(env, keycode)
+		return kNoop
 	end
 end
 

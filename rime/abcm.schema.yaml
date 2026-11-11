@@ -8,9 +8,9 @@ schema:
     基于原 ABC 输入法的改版。
 
 switches:
-  - name: full_shape
-    reset: 0
-    states: [ 半角, 全角 ]
+#  - name: full_shape
+#    reset: 1
+#    states: [ 半角, 全角 ]
   - name: simplification
     reset: 1
     states: [ 漢字, 汉字 ]
@@ -59,7 +59,7 @@ recognizer:
 
 punctuator:
   digit_separators: ",.:"
-  full_shape:
+  half_shape:
     ' ' : { commit: '　' }
     ',' : { commit: ， }
     '.' : { commit: 。 }
@@ -93,44 +93,45 @@ punctuator:
     ']' : [ 」, 】, 〕, ］ ]
     '{' : [ 『, 〖, ｛ ]
     '}' : [ 』, 〗, ｝ ]
-  half_shape:
-    ',' : { commit: "," }
-    '.' : { commit: "." }
-    '<' : { commit: "<" }
-    '>' : { commit: ">" }
-    '/' : { commit: "/" }
-    '?' : { commit: "?" }
-    ';' : { commit: ";" }
-    ':' : { commit: ":" }
-    "'" : { commit: "'" }
-    '"' : { commit: '"' }
-    '\' : { commit: '\' }
-    '|' : { commit: "|" }
-    '`' : { commit: "`" }
-    '~' : { commit: "~" }
-    '!' : { commit: "!" }
-    '@' : { commit: "@" }
-    '#' : { commit: "#" }
-    '%' : { commit: "%" }
-    '$' : { commit: "$" }
-    '^' : { commit: "^" }
-    '&' : { commit: "&" }
-    '*' : { commit: "*" }
-    '(' : { commit: "(" }
-    ')' : { commit: ")" }
-    '-' : { commit: "-" }
-    '_' : { commit: "_" }
-    '+' : { commit: "+" }
-    '=' : { commit: "=" }
-    '[' : { commit: "[" }
-    ']' : { commit: "]" }
-    '{' : { commit: "{" }
-    '}' : { commit: "}" }
+#  half_shape:
+#    ',' : { commit: "," }
+#    '.' : { commit: "." }
+#    '<' : { commit: "<" }
+#    '>' : { commit: ">" }
+#    '/' : { commit: "/" }
+#    '?' : { commit: "?" }
+#    ';' : { commit: ";" }
+#    ':' : { commit: ":" }
+#    "'" : { commit: "'" }
+#    '"' : { commit: '"' }
+#    '\' : { commit: '\' }
+#    '|' : { commit: "|" }
+#    '`' : { commit: "`" }
+#    '~' : { commit: "~" }
+#    '!' : { commit: "!" }
+#    '@' : { commit: "@" }
+#    '#' : { commit: "#" }
+#    '%' : { commit: "%" }
+#    '$' : { commit: "$" }
+#    '^' : { commit: "^" }
+#    '&' : { commit: "&" }
+#    '*' : { commit: "*" }
+#    '(' : { commit: "(" }
+#    ')' : { commit: ")" }
+#    '-' : { commit: "-" }
+#    '_' : { commit: "_" }
+#    '+' : { commit: "+" }
+#    '=' : { commit: "=" }
+#    '[' : { commit: "[" }
+#    ']' : { commit: "]" }
+#    '{' : { commit: "{" }
+#    '}' : { commit: "}" }
 
 translator:
   dictionary: luna_pinyin
   enable_completion: false
   enable_correction: false
+  enable_user_dict: true
 
 simplifier:
   excluded_types:
@@ -140,4 +141,3 @@ key_binder:
   bindings:
     - { when: has_menu, accept: minus, send: Page_Up }
     - { when: has_menu, accept: equal, send: Page_Down }
-    - { when: always, accept: Shift+space, toggle: full_shape }
