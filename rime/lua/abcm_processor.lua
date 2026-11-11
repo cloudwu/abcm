@@ -221,6 +221,7 @@ local choose_mode = {
 	[cFirst] = "select_first",
 	[cLast] = "select_last",
 	[cSpace] = "selecting",
+	[cEnter] = "exit",
 }
 
 function state.edit(env, ctx, keycode)
@@ -229,11 +230,15 @@ function state.edit(env, ctx, keycode)
 		if keywords[ctx.input] then
 			return exit_to_ascii(env)
 		end
-		local seg = ctx.composition:back()
-		if seg then
-			switch_state(env, choose)
-			seg.status = "kVoid"
-			refresh(env)
+		if choose == "exit" then
+			exit_to_ascii(env)
+		else
+			local seg = ctx.composition:back()
+			if seg then
+				switch_state(env, choose)
+				seg.status = "kVoid"
+				refresh(env)
+			end
 		end
 		return kAccepted
 	else
