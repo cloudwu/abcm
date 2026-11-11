@@ -4,9 +4,24 @@ local keywords = require "abcm_keywords"
 local translator = {}
 
 local dict
+local candidate_state = "close"
+local candidate_handler
 
 function translator.init(env)
 	dict = Component.Translator(env.engine, "translator", "script_translator")
+	candidate_handler = env.engine.context.property_update_notifier:connect(
+		function(ctx, name)
+			if name == "abc_candidate" then
+				candidate_state = ctx:get_property(name)
+			end
+		end)
+end
+
+function translator.fini(env)
+	if candidate_handler then
+		candidate_handler:disconnect()
+		candidate_handler = nil
+	end
 end
 
 local function filter_pinyin(input)
@@ -30,6 +45,15 @@ local function add_sep(preedit, input)
 	return result
 end
 
+local function yield_cand(cand)
+	if candidate_state == "one" then
+		if cand.preedit:find "[%d']" then
+			return
+		end
+	end
+	yield(cand)
+end
+
 local function filter_cand(pinyin, input, cand, start)
 	local n = cand._end - cand._start
 	if n ~= #pinyin then
@@ -41,7 +65,7 @@ local function filter_cand(pinyin, input, cand, start)
 	cand._start = start
 	cand._end = #input + start
 	cand.preedit = input
-	yield(cand)
+	yield_cand(cand)
 end
 
 local function print(...)
@@ -49,19 +73,7 @@ local function print(...)
 end
 
 function translator.func(input, seg, env)
-	if seg:has_tag "abc" then
-		local rawinput = env.engine.context.input
-		if keywords[rawinput] then
-			local cand = Candidate(
-				"keyword",
-				seg.start,
-				seg._end,
-				rawinput,
-				"西文"
-			)
-			yield(cand)
-			return
-		end
+	if candidate_state ~= "close" then
 		local pinyin, has_strokes = filter_pinyin(input)
 		local qseg = Segment(0, #pinyin)
 		qseg.tags = seg.tags
@@ -76,11 +88,14 @@ function translator.func(input, seg, env)
 				for cand in r:iter() do
 					cand._start = start
 					cand._end = cand._end + start
-					yield(cand)
+					yield_cand(cand)
 				end
 			end
 		end
 	elseif seg:has_tag "inumber" then
+		if keywords[input] then
+			return
+		end
 		local prefix = input:sub(1,1)
 		local text = input:sub(2):gsub(".", stroke.numbers[prefix])
 		local cand = Candidate("inumber", seg._start, seg._end, text, "")

@@ -9,6 +9,7 @@ schema:
 
 switches:
   - name: full_shape
+    reset: 0
     states: [ 半角, 全角 ]
   - name: simplification
     reset: 1
@@ -19,10 +20,10 @@ engine:
     - ascii_composer
     - recognizer
     - key_binder
-    - punctuator
     - lua_processor@*abcm_processor
     - selector
-    - fluid_editor
+    - punctuator
+    - express_editor
   segmentors:
     - ascii_segmentor
     - matcher
@@ -55,10 +56,76 @@ recognizer:
   patterns:
     inumber: "^[iI][0-9gsbqweznyrjd$kmflteohpcuaix+*/-]+$"
 
+
 punctuator:
-  import_preset: default 
+  digit_separators: ",.:"
   full_shape:
-    "^": "……"
+    ' ' : { commit: '　' }
+    ',' : { commit: ， }
+    '.' : { commit: 。 }
+    '<' : [ 《, 〈, «, ‹ ]
+    '>' : [ 》, 〉, », › ]
+    '/' : [ ／, ÷ ]
+    '?' : { commit: ？ }
+    ';' : { commit: ； }
+    ':' : { commit: ： }
+    '''' : { pair: [ '‘', '’' ] }
+    '"' : { pair: [ '“', '”' ] }
+    '\' : [ 、, ＼ ]
+    '|' : [ ·, ｜, '§', '¦' ]
+    '`' : ｀
+    '~' : ～
+    '!' : { commit: ！ }
+    '@' : ＠
+    '#' : ＃
+    '%' : [ ％, '°', '℃' ]
+    '$' : [ ￥, '$', '£', '¥', '¢', '¤' ]
+    '^' : { commit: …… }
+    '&' : ＆
+    '*' : [ ＊, ·, ×, ※ ]
+    '(' : （
+    ')' : ）
+    '-' : －
+    '_' : ——
+    '+' : ＋
+    '=' : ＝
+    '[' : [ 「, 【, 〔, ［ ]
+    ']' : [ 」, 】, 〕, ］ ]
+    '{' : [ 『, 〖, ｛ ]
+    '}' : [ 』, 〗, ｝ ]
+  half_shape:
+    ',' : { commit: "," }
+    '.' : { commit: "." }
+    '<' : { commit: "<" }
+    '>' : { commit: ">" }
+    '/' : { commit: "/" }
+    '?' : { commit: "?" }
+    ';' : { commit: ";" }
+    ':' : { commit: ":" }
+    "'" : { commit: "'" }
+    '"' : { commit: '"' }
+    '\' : { commit: '\' }
+    '|' : { commit: "|" }
+    '`' : { commit: "`" }
+    '~' : { commit: "~" }
+    '!' : { commit: "!" }
+    '@' : { commit: "@" }
+    '#' : { commit: "#" }
+    '%' : { commit: "%" }
+    '$' : { commit: "$" }
+    '^' : { commit: "^" }
+    '&' : { commit: "&" }
+    '*' : { commit: "*" }
+    '(' : { commit: "(" }
+    ')' : { commit: ")" }
+    '-' : { commit: "-" }
+    '_' : { commit: "_" }
+    '+' : { commit: "+" }
+    '=' : { commit: "=" }
+    '[' : { commit: "[" }
+    ']' : { commit: "]" }
+    '{' : { commit: "{" }
+    '}' : { commit: "}" }
 
 translator:
   dictionary: luna_pinyin
@@ -66,3 +133,9 @@ translator:
 simplifier:
   excluded_types:
     - inumber
+
+key_binder:
+  bindings:
+    - { when: has_menu, accept: minus, send: Page_Up }
+    - { when: has_menu, accept: equal, send: Page_Down }
+    - { when: always, accept: Shift+space, toggle: full_shape }
