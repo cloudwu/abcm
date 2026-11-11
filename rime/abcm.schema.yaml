@@ -18,9 +18,9 @@ switches:
 engine:
   processors:
     - ascii_composer
-    - recognizer
-    - key_binder
     - lua_processor@*abcm_processor
+    - key_binder
+    - recognizer
     - selector
     - punctuator
     - express_editor

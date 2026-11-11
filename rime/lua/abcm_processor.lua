@@ -12,6 +12,8 @@ local cEnter = 0xff0d
 local cEscape = 0xff1b
 local cDelete = 0xffff
 local cSpace = 0x20
+local c_A = string.byte "a"
+local c_Z = string.byte "z"
 
 local function charset(str)
 	local result = {}
@@ -21,7 +23,6 @@ local function charset(str)
 	return result
 end
 
---local setPunctuation = charset "`~!@#$%^&*()-_=[{]}\\|;:'\",<.>/?"
 local setInitials = charset "abcdefghijklmnopqrstuvwxyzI"
 local setAlphabet = charset "abcdefghijklmnopqrstuvwxyz12345678[]'"
 local setNumber = stroke.numbers.i
@@ -48,11 +49,11 @@ end
 local function exit_to_ascii(env)
 	local context = env.engine.context
 	local raw = context.input
+	switch_state(env, "initial")
 	context:clear_non_confirmed_composition()
 	env.engine:commit_text(raw)
 	context:clear()
 	context:set_option("ascii_mode", true)
-	switch_state(env, "initial")
 	return kRejected
 end
 
@@ -61,7 +62,7 @@ function processor.init(env)
 end
 
 local function valid_char(keycode, set)
-	if keycode < cSpace or keycode > 0x7f then
+	if keycode <= cSpace or keycode > 0x7f then
 		return
 	end
 	local c = string.char(keycode)
@@ -151,8 +152,22 @@ function state.selecting(env, ctx, keycode)
 			ctx:clear()
 		end
 		return push_initial(env, ctx, current)
+	elseif keycode > cSpace and keycode <= 0x7f then
+		switch_state(env, "initial")
+		ctx:commit()
+		ctx:clear()
+		ctx:set_option("ascii_mode", true)
+		return kRejected
 	end
 	return kNoop
+end
+
+local function ignore_key(env, keycode)
+	if keycode > cSpace and keycode <= 0x7f then
+		return exit_to_ascii(env)
+	else
+		return kNoop
+	end
 end
 
 function state.initial(env, ctx, keycode)
@@ -160,7 +175,7 @@ function state.initial(env, ctx, keycode)
 	if current then
 		return push_initial(env, ctx, current)
 	else
-		return kNoop
+		return ignore_key(env, keycode)
 	end
 end
 
@@ -182,7 +197,7 @@ function state.edit(env, ctx, keycode)
 			ctx:push_input(current)
 			return kAccepted
 		else
-			return kNoop
+			return ignore_key(env, keycode)
 		end
 	end
 end
@@ -192,19 +207,25 @@ function state.inumber(env, ctx, keycode)
 		if keywords[ctx.input] then
 			return exit_to_ascii(env)
 		end
+		return kNoop
 	end
 	local current = valid_char(keycode, setNumber)
 	if current then
 		ctx:push_input(current)
 		return kAccepted
+	elseif keycode > cSpace and keycode <= 0x7f then
+		return exit_to_ascii(env)
 	else
-		return kNoop
+		return ignore_key(env, keycode)
 	end
 end
 
 function processor.func(key, env)
-	if key.modifier ~= 0 then
+	if (key.modifier & ~1) ~= 0 then
 		return kNoop
+	end
+	if env.abc_state ~= "initial" and not env.engine.context:is_composing() then
+		switch_state(env, "initial")
 	end
 	return state[env.abc_state](env, env.engine.context, key.keycode)
 end
