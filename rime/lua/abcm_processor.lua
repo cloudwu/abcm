@@ -14,6 +14,8 @@ local cDelete = 0xffff
 local cSpace = 0x20
 local c_A = string.byte "a"
 local c_Z = string.byte "z"
+local c_0 = string.byte "0"
+local c_9 = string.byte "9"
 
 local function charset(str)
 	local result = {}
@@ -88,10 +90,10 @@ end
 
 function state.selecting(env, ctx, keycode)
 	if not ctx:has_menu() then
-		if keycode == cBackspace or
+		if ctx.input == "" and (ctx.keycode == cBackspace or
 			keycode == cSpace or
 			keycode == cEnter or
-			keycode == cEscape then
+			keycode == cEscape) then
 			return kRejected
 		end
 	elseif keycode == cBackspace then
@@ -152,7 +154,8 @@ function state.selecting(env, ctx, keycode)
 			ctx:clear()
 		end
 		return push_initial(env, ctx, current)
-	elseif keycode > cSpace and keycode <= 0x7f then
+	elseif keycode > cSpace and keycode <= 0x7f and
+		not (keycode >= c_0 and keycode <= c_9) then
 		switch_state(env, "initial")
 		ctx:commit()
 		ctx:clear()
