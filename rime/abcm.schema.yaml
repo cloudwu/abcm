@@ -17,12 +17,12 @@ switches:
 
 engine:
   processors:
-    - ascii_composer
-    - lua_processor@*abcm_processor
     - key_binder
+    - ascii_composer
+    - punctuator
+    - lua_processor@*abcm_processor
     - recognizer
     - selector
-    - punctuator
     - express_editor
   segmentors:
     - ascii_segmentor
