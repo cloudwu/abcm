@@ -12,10 +12,12 @@ local cEnter = 0xff0d
 local cEscape = 0xff1b
 local cDelete = 0xffff
 local cSpace = 0x20
-local c_A = string.byte "a"
-local c_Z = string.byte "z"
+local c_A = string.byte "A"
+local c_Z = string.byte "Z"
 local c_0 = string.byte "0"
 local c_9 = string.byte "9"
+local cFirst = string.byte "["
+local cLast = string.byte "]"
 
 local function charset(str)
 	local result = {}
@@ -25,6 +27,7 @@ local function charset(str)
 	return result
 end
 
+local setPunctuation = charset "`~!@#$%^&*()-_=+[]{}\\|;:'\",<.>/?"
 local setInitials = charset "abcdefghijklmnopqrstuvwxyzI"
 local setAlphabet = charset "abcdefghijklmnopqrstuvwxyz12345678[]'"
 local setNumber = stroke.numbers.i
@@ -39,13 +42,21 @@ local function set_candidate(env, v)
 	env.abc_candidate = v
 end
 
+local select_mode = {
+	selecting = "open",
+	select_first = "open_first",
+	select_last = "open_last",
+}
+
 local function switch_state(env, state)
-	if state == "selecting" then
-		set_candidate(env, "open")
+	local cand_mode = select_mode[state]
+	if cand_mode then
+		set_candidate(env, cand_mode)
+		env.abc_state = "selecting"
 	else
 		set_candidate(env, "close")
+		env.abc_state = state
 	end
-	env.abc_state = state
 end
 
 local function exit_to_ascii(env)
@@ -88,18 +99,29 @@ local function refresh(env)
 	engine:compose(engine.context)
 end
 
+local open_state = {
+	open = true,
+	open_first = true,
+	open_last = true,
+}
+
 function state.selecting(env, ctx, keycode)
 	if not ctx:has_menu() then
-		if ctx.input == "" and (ctx.keycode == cBackspace or
+		if ctx.keycode == cBackspace or
 			keycode == cSpace or
 			keycode == cEnter or
-			keycode == cEscape) then
-			return kRejected
+			keycode == cEscape then
+			if ctx.input == "" then
+				return kRejected
+			else
+				switch_state(env, "edit")
+			end
 		end
 	elseif keycode == cBackspace then
 		local seg = ctx.composition:back()
 		if seg then
-			if env.abc_candidate == "open" then
+			local current_cand = env.abc_candidate
+			if current_cand == "open" then
 				set_candidate(env, "one")
 				local cand = seg:get_selected_candidate()
 				if cand then
@@ -110,6 +132,12 @@ function state.selecting(env, ctx, keycode)
 						return kAccepted
 					end
 				end
+			elseif current_cand == "open_first" or current_cand == "open_last" then
+				set_candidate(env, "close")
+				seg.status = "kVoid"
+				switch_state(env, "edit")
+				refresh(env)
+				return kAccepted
 			end
 		end
 		if ctx:reopen_previous_segment() then
@@ -145,7 +173,7 @@ function state.selecting(env, ctx, keycode)
 	local current = valid_char(keycode, setInitials)
 	if current then
 		-- confirm and reset state
-		if env.abc_candidate == "open" then
+		if open_state[env.abc_candidate] then
 			ctx:confirm_current_selection()
 		end
 		if ctx:has_menu() then
@@ -154,13 +182,15 @@ function state.selecting(env, ctx, keycode)
 			ctx:clear()
 		end
 		return push_initial(env, ctx, current)
-	elseif keycode > cSpace and keycode <= 0x7f and
-		not (keycode >= c_0 and keycode <= c_9) then
+	elseif keycode >= c_A and keycode <= c_Z then
 		switch_state(env, "initial")
 		ctx:commit()
 		ctx:clear()
 		ctx:set_option("ascii_mode", true)
 		return kRejected
+	elseif valid_char(keycode, setPunctuation) then
+		ctx:commit()
+		switch_state(env, "initial")
 	end
 	return kNoop
 end
@@ -182,14 +212,21 @@ function state.initial(env, ctx, keycode)
 	end
 end
 
+local choose_mode = {
+	[cFirst] = "select_first",
+	[cLast] = "select_last",
+	[cSpace] = "selecting",
+}
+
 function state.edit(env, ctx, keycode)
-	if keycode == cSpace then
+	local choose = choose_mode[keycode]
+	if choose then
 		if keywords[ctx.input] then
 			return exit_to_ascii(env)
 		end
 		local seg = ctx.composition:back()
 		if seg then
-			switch_state(env, "selecting")
+			switch_state(env, choose)
 			seg.status = "kVoid"
 			refresh(env)
 		end

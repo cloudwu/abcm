@@ -74,21 +74,27 @@ end
 
 function translator.func(input, seg, env)
 	if candidate_state ~= "close" then
+		local not_check = not (candidate_state == "open_first" or candidate_state == "open_last")
 		local pinyin, has_strokes = filter_pinyin(input)
-		local qseg = Segment(0, #pinyin)
+		local length = #pinyin
+		local qseg = Segment(0, length)
 		qseg.tags = seg.tags
 		local r = dict:query(pinyin, qseg)
 		if r then
 			local start = seg._start
 			if has_strokes then
 				for cand in r:iter() do
-					filter_cand(pinyin, input, cand, start)
+					if not_check or (cand._end == length and cand.type ~= "sentence") then
+						filter_cand(pinyin, input, cand, start)
+					end
 				end
 			else
 				for cand in r:iter() do
-					cand._start = start
-					cand._end = cand._end + start
-					yield_cand(cand)
+					if not_check or (cand._end == length and cand.type ~= "sentence") then
+						cand._start = start
+						cand._end = cand._end + start
+						yield_cand(cand)
+					end
 				end
 			end
 		end

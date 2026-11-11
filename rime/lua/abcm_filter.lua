@@ -1,11 +1,33 @@
 local stroke = require "abcm_stroke"
 local cpattern = utf8.charpattern
+local last_char = cpattern .. "$"
+local first_comment = "(" .. cpattern .. ")(.*)"
+local last_comment = "(.*)(" .. cpattern .. ")$"
 local clut = stroke.hz
 
 local filter = {}
 
 local function print(...)
 	log.warning(table.concat({...}, " "))
+end
+
+local candidate_state
+local candidate_handler
+
+function filter.init(env)
+	candidate_handler = env.engine.context.property_update_notifier:connect(
+		function(ctx, name)
+			if name == "abc_candidate" then
+				candidate_state = ctx:get_property(name)
+			end
+		end)
+end
+
+function filter.fini(env)
+	if candidate_handler then
+		candidate_handler:disconnect()
+		candidate_handler = nil
+	end
 end
 
 function filter.tags_match(seg, env)
@@ -38,17 +60,31 @@ local function match_stroke(cand)
 	return full_comment
 end
 
+local function filter_cand(cand)
+	local comment = match_stroke(cand)
+	if comment then
+		local t = cand.text
+		if candidate_state == "open_first" then
+			return t:gsub(first_comment, "[%1]%2"), t:match(cpattern)
+		elseif candidate_state == "open_last" then
+			return t:gsub(last_comment, "%1[%2]"), t:match(last_char)
+		else
+			return comment, t
+		end
+	end
+end
+
 function filter.func(input, env)
 	for cand in input:iter() do
-		local comment = match_stroke(cand)
+		local comment, text = filter_cand(cand)
 		if comment then
 			local new_cand = ShadowCandidate(
-			    cand,
+				cand,
 				cand.type,
-	            cand.text,
-		        comment,
-			    false
-	        )
+				text,
+				comment,
+				false
+			)
 			yield(new_cand)
 		end
     end

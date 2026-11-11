@@ -19,8 +19,8 @@ engine:
   processors:
     - key_binder
     - ascii_composer
-    - punctuator
     - lua_processor@*abcm_processor
+    - punctuator
     - recognizer
     - selector
     - express_editor
@@ -129,6 +129,8 @@ punctuator:
 
 translator:
   dictionary: luna_pinyin
+  enable_completion: false
+  enable_correction: false
 
 simplifier:
   excluded_types:
