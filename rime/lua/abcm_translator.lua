@@ -13,35 +13,19 @@ local function print(...)
 end
 
 function translator.init(env)
-	dict = Component.Translator(env.engine, "translator", "script_translator")
+	dict = Component.ScriptTranslator(env.engine, "translator", "script_translator")
 	candidate_handler = env.engine.context.property_update_notifier:connect(
 		function(ctx, name)
 			if name == "abc_candidate" then
 				candidate_state = ctx:get_property(name)
 			end
 		end)
-	mem = Memory (
-		env.engine,
-		env.engine.schema,
-		"translator"
-	)
-
-	mem:memorize(function(commit)
-		-- todo : user dict
-		for i, entry in ipairs(commit:get()) do
---			print("Memorize", entry.text, tostring(entry.comment), tostring(entry.custom_code))
-		end
-		return true
-	end)
 end
 
 function translator.fini(env)
 	if candidate_handler then
 		candidate_handler:disconnect()
 		candidate_handler = nil
-	end
-	if mem then
-		mem:disconnect()
 	end
 end
 

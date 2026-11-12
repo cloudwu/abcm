@@ -78,6 +78,9 @@ function filter.func(input, env)
 	for cand in input:iter() do
 		local comment, text = filter_cand(cand)
 		if comment then
+			if cand:get_dynamic_type() == "Shadow" then
+				cand = cand:get_genuine()
+			end
 			local new_cand = ShadowCandidate(
 				cand,
 				cand.type,
