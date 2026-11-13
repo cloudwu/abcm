@@ -1,5 +1,40 @@
 local stroke = {}
 
+-- reverse lookup table for stroke
+-- 2 chars key "11" to "88"
+-- 1 char key "1" to "8"
+local function sort_stroke(a, b)
+	return tonumber(a:match "%d+") < tonumber(b:match "%d+")
+end
+
+local reverse = {
+	__mode = "v",
+	__index = function (self, prek)
+		local numberk = tonumber(prek:sub(1,2))
+		local tmp = {}
+		for i = 1, 8 do
+			tmp[i] = {}
+			self[tostring(i)] = tmp[i]
+			for j = 1, 8 do
+				local key = i*10 + j
+				tmp[key] = {}
+				self[tostring(key)] = tmp[key]
+			end
+		end
+		for ch, code in pairs(stroke.hz) do
+			local prefix = tonumber(code:sub(1,2))
+			local t = tmp[prefix]
+			t[#t+1] = code .. " " .. ch
+		end
+		for k, v in pairs(tmp) do
+			table.sort(v, sort_stroke)
+		end
+		return tmp[numberk]
+	end
+}
+
+stroke.reverse = setmetatable({[""] = false}, reverse)
+
 stroke.numbers = {
 i = {
 	["0"] = "○",

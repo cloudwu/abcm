@@ -55,6 +55,7 @@ recognizer:
   import_preset: default 
   patterns:
     inumber: "^[iI][0-9gsbqweznyrjd$kmflteohpcuaix+*/-]+$"
+    stroke: "^u[1-8]+$"
 
 punctuator:
   digit_separators: ",.:"

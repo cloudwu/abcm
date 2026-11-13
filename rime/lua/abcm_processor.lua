@@ -90,6 +90,8 @@ local state = {}
 local function push_initial(env, ctx, ch)
 	if setNumberI[ch] then
 		switch_state(env, "inumber")
+	elseif ch == "u" then
+		switch_state(env, "stroke")
 	else
 		switch_state(env, "edit")
 	end
@@ -149,7 +151,7 @@ function state.selecting(env, ctx, keycode)
 		ctx:clear()
 		switch_state(env, "initial")
 		return kAccepted
-	elseif keycode == cSpace then
+	elseif keycode == cSpace or keycode == cEnter then
 		local r = ctx:confirm_current_selection()
 		if not r then
 			ctx:commit()
@@ -161,12 +163,6 @@ function state.selecting(env, ctx, keycode)
 				switch_state(env, "initial")
 			end
 		end
-		return kAccepted
-	elseif keycode == cEnter then
-		ctx:clear_previous_segment()
-		ctx:commit()
-		ctx:clear()
-		switch_state(env, "initial")
 		return kAccepted
 	elseif keycode == cEscape then
 		switch_state(env, "initial")
@@ -268,6 +264,18 @@ function state.inumber(env, ctx, keycode)
 	else
 		return ignore_key(env, keycode)
 	end
+end
+
+function state.stroke(env, ctx, keycode)
+	if not ctx:has_menu() then
+		return kNoop
+	end
+	if keycode == cEnter then
+		switch_state(env, "initial")
+		ctx:commit()
+		return kAccepted
+	end
+	return kNoop
 end
 
 function processor.func(key, env)

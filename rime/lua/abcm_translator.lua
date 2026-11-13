@@ -7,6 +7,7 @@ local dict
 local candidate_state = "close"
 local candidate_handler
 local mem
+local reverse
 
 local function print(...)
 	log.warning(table.concat({...}, " "))
@@ -14,6 +15,7 @@ end
 
 function translator.init(env)
 	dict = Component.ScriptTranslator(env.engine, "translator", "script_translator")
+	reverse = ReverseLookup "luna_pinyin"
 	candidate_handler = env.engine.context.property_update_notifier:connect(
 		function(ctx, name)
 			if name == "abc_candidate" then
@@ -107,6 +109,23 @@ function translator.func(input, seg, env)
 		local text = input:sub(2):gsub(".", stroke.numbers[prefix])
 		local cand = Candidate("inumber", seg._start, seg._end, text, "")
 		yield(cand)
+	elseif seg:has_tag "stroke" then
+		local tbl = stroke.reverse[input:sub(2,3)]
+		if not tbl then
+			return
+		end
+		local input_code = input:sub(2)
+		local n = #input_code
+		for _, code in ipairs(tbl) do
+			if code:sub(1, n) == input_code then
+				local ch, hz = code:match "(%d+) (.*)"
+				if ch then
+					local pinyin = reverse:lookup(hz)
+					local cand = Candidate("stroke", seg._start, seg._end, hz, ch .. " " .. pinyin)
+					yield(cand)
+				end
+			end
+		end
 	end
 end
 
