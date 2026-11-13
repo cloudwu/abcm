@@ -56,6 +56,7 @@ recognizer:
   patterns:
     inumber: "^[iI][0-9gsbqweznyrjd$kmflteohpcuaix+*/-]+$"
     stroke: "^u[1-8]+$"
+    ascii: "^v.+$"
 
 punctuator:
   digit_separators: ",.:"

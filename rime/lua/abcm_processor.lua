@@ -92,6 +92,8 @@ local function push_initial(env, ctx, ch)
 		switch_state(env, "inumber")
 	elseif ch == "u" then
 		switch_state(env, "stroke")
+	elseif ch == "v" then
+		switch_state(env, "ascii")
 	else
 		switch_state(env, "edit")
 	end
@@ -271,6 +273,18 @@ function state.stroke(env, ctx, keycode)
 		return kNoop
 	end
 	if keycode == cEnter then
+		switch_state(env, "initial")
+		ctx:commit()
+		return kAccepted
+	end
+	return kNoop
+end
+
+function state.ascii(env, ctx, keycode)
+	if keycode == cSpace then
+		ctx:push_input " "
+		return kAccepted
+	elseif keycode == cEnter then
 		switch_state(env, "initial")
 		ctx:commit()
 		return kAccepted

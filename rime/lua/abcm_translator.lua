@@ -109,6 +109,10 @@ function translator.func(input, seg, env)
 		local text = input:sub(2):gsub(".", stroke.numbers[prefix])
 		local cand = Candidate("inumber", seg._start, seg._end, text, "")
 		yield(cand)
+	elseif seg:has_tag "ascii" then
+		local text = input:sub(2)
+		local cand = Candidate("ascii", seg._start, seg._end, text, "")
+		yield(cand)
 	elseif seg:has_tag "stroke" then
 		local tbl = stroke.reverse[input:sub(2,3)]
 		if not tbl then
